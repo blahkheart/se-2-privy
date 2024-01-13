@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AppProps } from "next/app";
+import { PrivyProvider } from "@privy-io/react-auth";
 import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import NextNProgress from "nextjs-progressbar";
@@ -15,6 +16,12 @@ import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { appChains } from "~~/services/web3/wagmiConnectors";
 import "~~/styles/globals.css";
 
+// This method will be passed to the PrivyProvider as a callback
+// that runs after successful login.
+const handleLogin = (user: any) => {
+  console.log(`User ${user.id} logged in!`);
+};
+
 const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   const price = useNativeCurrencyPrice();
   const setNativeCurrencyPrice = useGlobalState(state => state.setNativeCurrencyPrice);
@@ -28,10 +35,26 @@ const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   return (
     <>
       <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="relative flex flex-col flex-1">
-          <Component {...pageProps} />
-        </main>
+        <PrivyProvider
+          appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}
+          onSuccess={handleLogin}
+          config={{
+            loginMethods: ["email", "wallet"],
+            embeddedWallets: {
+              createOnLogin: "users-without-wallets",
+            },
+            appearance: {
+              theme: "light",
+              accentColor: "#676FFF",
+              logo: "https://your-logo-url",
+            },
+          }}
+        >
+          <Header />
+          <main className="relative flex flex-col flex-1">
+            <Component {...pageProps} />
+          </main>
+        </PrivyProvider>
         <Footer />
       </div>
       <Toaster />
