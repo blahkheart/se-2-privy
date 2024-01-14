@@ -2,7 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { usePrivy } from "@privy-io/react-auth";
+import { useLogin, usePrivy } from "@privy-io/react-auth";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
 // import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { FaucetButton } from "~~/components/scaffold-eth";
@@ -56,10 +56,22 @@ export const HeaderMenuLinks = () => {
  * Site header
  */
 export const Header = () => {
+  const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const burgerMenuRef = useRef<HTMLDivElement>(null);
-  const { login, logout, ready, authenticated } = usePrivy();
-
+  const { logout, ready, authenticated } = usePrivy();
+  const { login } = useLogin({
+    onComplete: (user, isNewUser, wasAlreadyAuthenticated) => {
+      console.log(user, isNewUser, wasAlreadyAuthenticated);
+      router.push("/dashboard");
+      // Any logic you'd like to execute if the user is/becomes authenticated while this
+      // component is mounted
+    },
+    onError: error => {
+      console.log(error);
+      // Any logic you'd like to execute after a user exits the login flow or there is an error
+    },
+  });
   useOutsideClick(
     burgerMenuRef,
     useCallback(() => setIsDrawerOpen(false), []),

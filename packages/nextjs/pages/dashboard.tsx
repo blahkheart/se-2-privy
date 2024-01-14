@@ -1,13 +1,46 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 // import Link from "next/link";
 import { useRouter } from "next/router";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { NextPage } from "next";
+// import {useWallets} from '@privy-io/react-auth';
+// import { createWalletClient, custom } from "viem";
+// import { mainnet } from "viem/chains";
 // import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { MetaHeader } from "~~/components/MetaHeader";
 
+
+// import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
+
 const Dashboard: NextPage = () => {
   const router = useRouter();
+  const { wallets } = useWallets();
+  const embeddedWallet = wallets.find(wallet => wallet.walletClientType === "privy");
+  // const { targetNetwork } = useTargetNetwork();
+  const [eip1193Provider, setEip1193Provider] = useState<any>({});
+  const [ethersProvider, setEthersProvider] = useState<any>({});
+
+  useEffect(() => {
+    if (!embeddedWallet) return;
+    const readyEip1193Provider = async () => {
+      const eip1193provider = await embeddedWallet.getEthereumProvider();
+      setEip1193Provider(eip1193provider);
+    };
+    readyEip1193Provider();
+  }, [embeddedWallet]);
+
+  useEffect(() => {
+    if (!embeddedWallet) return;
+    const readyEthersProvider = async () => {
+      const provider = await embeddedWallet.getEthersProvider();
+      const signer = provider.getSigner();
+      setEthersProvider(signer);
+    };
+    readyEthersProvider();
+  }, [embeddedWallet]);
+
+  console.log("client:", eip1193Provider);
+
   const {
     ready,
     authenticated,
@@ -25,12 +58,15 @@ const Dashboard: NextPage = () => {
     unlinkTwitter,
     linkDiscord,
     unlinkDiscord,
+    signMessage,
   } = usePrivy();
+
   useEffect(() => {
     if (ready && !authenticated) {
       router.push("/");
     }
   }, [ready, authenticated, router]);
+
   const numAccounts = user?.linkedAccounts?.length || 0;
   const canRemoveAccount = numAccounts > 1;
 
@@ -41,6 +77,67 @@ const Dashboard: NextPage = () => {
   const googleSubject = user?.google?.subject || null;
   const twitterSubject = user?.twitter?.subject || null;
   const discordSubject = user?.discord?.subject || null;
+  // Replace this with the message you'd like your user to sign
+  const message = "Hello world";
+  // Replace this with the text you'd like on your signature modal,
+  // if you do not have `noPromptsOnSignature` enabled
+  const uiConfig = {
+    title: "Sign Message",
+    description: "This is a test message, nothing to see here... \nSign the message below: ",
+    buttonText: "Sign message ",
+  };
+
+  const _personalSignMessage = async (message: string) => {
+    const signature = await signMessage(message, uiConfig);
+    console.log("sig:", signature);
+  };
+  // All properties on a domain are optional
+  const domain = {
+    name: "Ether Mail",
+    version: "1",
+    chainId: 1,
+    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+  };
+
+  // The named list of all type definitions
+  const types = {
+    Person: [
+      { name: "name", type: "string" },
+      { name: "wallet", type: "address" },
+    ],
+    Mail: [
+      { name: "from", type: "Person" },
+      { name: "to", type: "Person" },
+      { name: "contents", type: "string" },
+    ],
+  };
+
+  // The data to sign
+  const value = {
+    from: {
+      name: "Cow",
+      wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
+    },
+    to: {
+      name: "Bob",
+      wallet: "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB",
+    },
+    contents: "Hello, Bob!",
+  };
+  // const _typeDataSignMessage = async (walletAddress: string) => {
+  const _typeDataSignMessage = async () => {
+    try {
+      // const signature = await eip1193Provider.request({
+      //   method: "eth_signTypedData_v4",
+      //   params: [walletAddress, uiConfig],
+      // });
+
+      const signature = await ethersProvider._signTypedData(domain, types, value);
+      console.log("712sig:", signature);
+    } catch (e) {
+      console.log("ERR_712_SIGN", e);
+    }
+  };
 
   return (
     <>
@@ -59,9 +156,41 @@ const Dashboard: NextPage = () => {
                     <h1 className="text-2xl font-semibold">Privy Auth Demo</h1>
                     <button
                       onClick={logout}
-                      className="text-sm bg-violet-200 hover:text-violet-900 py-2 px-4 rounded-md text-violet-700"
+                      className="ml-5 text-sm bg-violet-200 hover:text-violet-900 py-2 px-4 rounded-md text-violet-700"
                     >
                       Logout
+                    </button>
+                  </div>
+                  {embeddedWallet && (
+                    <div className="flex flex-row justify-between mt-5">
+                      <h1 className="text-2xl font-semibold">Wallet Address</h1>
+                      <div className="ml-5 text-sm bg-violet-200 hover:text-violet-900 py-2 px-4 rounded-md text-violet-700">
+                        {embeddedWallet.address}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex flex-row justify-between mt-5">
+                    <h1 className="text-2xl font-semibold"> EIP-191 Personal Sign</h1>
+                    <button
+                      onClick={() => {
+                        _personalSignMessage(message);
+                      }}
+                      className="ml-5 text-sm border border-violet-600 hover:border-violet-700 py-2 px-4 rounded-md text-violet-600 hover:text-violet-700 disabled:border-gray-500 disabled:text-gray-500 hover:disabled:text-gray-500"
+                      disabled={false}
+                    >
+                      Sign
+                    </button>
+                  </div>
+                  <div className="flex flex-row justify-between mt-5">
+                    <h1 className="text-2xl font-semibold"> EIP-712 typed data sign </h1>
+                    <button
+                      disabled={!embeddedWallet}
+                      onClick={() => {
+                        _typeDataSignMessage(embeddedWallet ? embeddedWallet.address : "");
+                      }}
+                      className="ml-5 text-sm border border-violet-600 hover:border-violet-700 py-2 px-4 rounded-md text-violet-600 hover:text-violet-700 disabled:border-gray-500 disabled:text-gray-500 hover:disabled:text-gray-500"
+                    >
+                      Sign
                     </button>
                   </div>
                   <div className="mt-12 flex gap-4 flex-wrap">
@@ -146,6 +275,7 @@ const Dashboard: NextPage = () => {
                         Connect email
                       </button>
                     )}
+
                     {wallet ? (
                       <button
                         onClick={() => {
@@ -164,6 +294,7 @@ const Dashboard: NextPage = () => {
                         Connect wallet
                       </button>
                     )}
+
                     {phone ? (
                       <button
                         onClick={() => {

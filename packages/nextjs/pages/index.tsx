@@ -1,9 +1,20 @@
+// import { useEffect } from "react";
 import Link from "next/link";
+// import { useRouter } from "next/router";
+// import { usePrivy } from "@privy-io/react-auth";
+// import { useLogin } from "@privy-io/react-auth";
 import type { NextPage } from "next";
 import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { MetaHeader } from "~~/components/MetaHeader";
 
 const Home: NextPage = () => {
+  // const router = useRouter();
+  // const { ready, authenticated } = usePrivy();
+
+  // useEffect(() => {
+  //   ready && authenticated && router.push("/dashboard");
+  // }, [ready, authenticated]);
+
   return (
     <>
       <MetaHeader />
