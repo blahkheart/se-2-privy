@@ -6,7 +6,7 @@ import type { NextPage } from "next";
 import { MetaHeader } from "~~/components/MetaHeader";
 import SignModal from "~~/components/SignModal";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
-
+import { notification } from "~~/utils/scaffold-eth";
 
 const Dashboard: NextPage = () => {
   const router = useRouter();
@@ -61,8 +61,12 @@ const Dashboard: NextPage = () => {
   };
 
   const _personalSignMessage = async (message: string) => {
-    const signature = await signMessage(message, uiConfig);
-    console.log("sig:", signature);
+    try {
+      const signature = await signMessage(message, uiConfig);
+      console.log("sig:", signature);
+    } catch (e: any) {
+      notification.error(e.message);
+    }
   };
 
   // All properties on a domain are optional
@@ -103,11 +107,7 @@ const Dashboard: NextPage = () => {
     if (isClosed) setIsModalOpen(false);
   };
   const _typeDataSignMessage = async () => {
-    try {
-      setIsModalOpen(true);
-    } catch (e) {
-      console.log("ERR_712_SIGN", e);
-    }
+    setIsModalOpen(true);
   };
 
   return (
@@ -118,7 +118,7 @@ const Dashboard: NextPage = () => {
         <div className="flex-grow bg-base-300 w-full px-8 py-12">
           <h1 className="text-center mb-8">
             <span className="block text-2xl mb-2">Welcome to</span>
-            <span className="block text-4xl font-bold">Scaffold-ETH 2</span>
+            <span className="block text-4xl font-bold">Scaffold-ETH 2 x Privy</span>
           </h1>
           <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
             <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center  rounded-3xl">
@@ -141,30 +141,34 @@ const Dashboard: NextPage = () => {
                       </div>
                     </div>
                   )}
-                  <div className="flex flex-row justify-between mt-5">
-                    <h1 className="text-2xl font-semibold"> EIP-191 Personal Sign</h1>
-                    <button
-                      onClick={() => {
-                        _personalSignMessage(message);
-                      }}
-                      className="ml-5 text-sm border border-violet-600 hover:border-violet-700 py-2 px-4 rounded-md text-violet-600 hover:text-violet-700 disabled:border-gray-500 disabled:text-gray-500 hover:disabled:text-gray-500"
-                      disabled={false}
-                    >
-                      Sign
-                    </button>
-                  </div>
-                  <div className="flex flex-row justify-between mt-5">
-                    <h1 className="text-2xl font-semibold"> EIP-712 typed data sign </h1>
-                    <button
-                      disabled={!embeddedWallet}
-                      onClick={() => {
-                        _typeDataSignMessage();
-                      }}
-                      className="ml-5 text-sm border border-violet-600 hover:border-violet-700 py-2 px-4 rounded-md text-violet-600 hover:text-violet-700 disabled:border-gray-500 disabled:text-gray-500 hover:disabled:text-gray-500"
-                    >
-                      Sign
-                    </button>
-                  </div>
+                  {embeddedWallet && (
+                    <>
+                      <div className="flex flex-row justify-between mt-5">
+                        <h1 className="text-2xl font-semibold"> EIP-191 Personal Sign</h1>
+                        <button
+                          onClick={() => {
+                            _personalSignMessage(message);
+                          }}
+                          className="ml-5 text-sm border border-violet-600 hover:border-violet-700 py-2 px-4 rounded-md text-violet-600 hover:text-violet-700 disabled:border-gray-500 disabled:text-gray-500 hover:disabled:text-gray-500"
+                          disabled={false}
+                        >
+                          Sign
+                        </button>
+                      </div>
+                      <div className="flex flex-row justify-between mt-5">
+                        <h1 className="text-2xl font-semibold"> EIP-712 typed data sign </h1>
+                        <button
+                          disabled={!embeddedWallet}
+                          onClick={() => {
+                            _typeDataSignMessage();
+                          }}
+                          className="ml-5 text-sm border border-violet-600 hover:border-violet-700 py-2 px-4 rounded-md text-violet-600 hover:text-violet-700 disabled:border-gray-500 disabled:text-gray-500 hover:disabled:text-gray-500"
+                        >
+                          Sign
+                        </button>
+                      </div>
+                    </>
+                  )}
                   <div className="mt-12 flex gap-4 flex-wrap">
                     {googleSubject ? (
                       <button

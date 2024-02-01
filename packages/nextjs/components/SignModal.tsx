@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "antd";
 import { usePrivyEthersProvider } from "~~/hooks/scaffold-eth/usePrivyEthersProvider";
+import { notification } from "~~/utils/scaffold-eth";
+
 
 interface Props {
   isOpen: boolean;
@@ -44,6 +46,7 @@ const SignModal: React.FC<Props> = ({ isOpen, onClose, domain, types, data }) =>
           onClose(true);
         }}
         onCancel={() => {
+          notification.error("User rejected the request.");
           setModalOpen(false);
           onClose(true);
         }}
