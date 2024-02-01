@@ -35,26 +35,10 @@ const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   return (
     <>
       <div className="flex flex-col min-h-screen">
-        <PrivyProvider
-          appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}
-          onSuccess={handleLogin}
-          config={{
-            loginMethods: ["email", "wallet"],
-            embeddedWallets: {
-              createOnLogin: "users-without-wallets",
-            },
-            appearance: {
-              theme: "light",
-              accentColor: "#676FFF",
-              logo: "https://your-logo-url",
-            },
-          }}
-        >
-          <Header />
-          <main className="relative flex flex-col flex-1">
-            <Component {...pageProps} />
-          </main>
-        </PrivyProvider>
+        <Header />
+        <main className="relative flex flex-col flex-1">
+          <Component {...pageProps} />
+        </main>
         <Footer />
       </div>
       <Toaster />
@@ -71,16 +55,32 @@ const ScaffoldEthAppWithProviders = (props: AppProps) => {
   }, [isDarkMode]);
 
   return (
-    <WagmiConfig config={wagmiConfig}>
-      <NextNProgress />
-      <RainbowKitProvider
-        chains={appChains.chains}
-        avatar={BlockieAvatar}
-        theme={isDarkTheme ? darkTheme() : lightTheme()}
-      >
-        <ScaffoldEthApp {...props} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <PrivyProvider
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}
+      onSuccess={handleLogin}
+      config={{
+        loginMethods: ["email", "wallet"],
+        embeddedWallets: {
+          createOnLogin: "users-without-wallets",
+        },
+        appearance: {
+          theme: "light",
+          accentColor: "#676FFF",
+          logo: "https://your-logo-url",
+        },
+      }}
+    >
+      <WagmiConfig config={wagmiConfig}>
+        <NextNProgress />
+        <RainbowKitProvider
+          chains={appChains.chains}
+          avatar={BlockieAvatar}
+          theme={isDarkTheme ? darkTheme() : lightTheme()}
+        >
+          <ScaffoldEthApp {...props} />
+        </RainbowKitProvider>
+      </WagmiConfig>
+    </PrivyProvider>
   );
 };
 

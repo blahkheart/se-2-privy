@@ -3,44 +3,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { NextPage } from "next";
-// import {useWallets} from '@privy-io/react-auth';
-// import { createWalletClient, custom } from "viem";
-// import { mainnet } from "viem/chains";
-// import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { MetaHeader } from "~~/components/MetaHeader";
+import SignModal from "~~/components/SignModal";
+import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 
-
-// import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 
 const Dashboard: NextPage = () => {
   const router = useRouter();
   const { wallets } = useWallets();
   const embeddedWallet = wallets.find(wallet => wallet.walletClientType === "privy");
-  // const { targetNetwork } = useTargetNetwork();
-  const [eip1193Provider, setEip1193Provider] = useState<any>({});
-  const [ethersProvider, setEthersProvider] = useState<any>({});
-
-  useEffect(() => {
-    if (!embeddedWallet) return;
-    const readyEip1193Provider = async () => {
-      const eip1193provider = await embeddedWallet.getEthereumProvider();
-      setEip1193Provider(eip1193provider);
-    };
-    readyEip1193Provider();
-  }, [embeddedWallet]);
-
-  useEffect(() => {
-    if (!embeddedWallet) return;
-    const readyEthersProvider = async () => {
-      const provider = await embeddedWallet.getEthersProvider();
-      const signer = provider.getSigner();
-      setEthersProvider(signer);
-    };
-    readyEthersProvider();
-  }, [embeddedWallet]);
-
-  console.log("client:", eip1193Provider);
-
+  const { targetNetwork } = useTargetNetwork();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const {
     ready,
     authenticated,
@@ -91,12 +64,13 @@ const Dashboard: NextPage = () => {
     const signature = await signMessage(message, uiConfig);
     console.log("sig:", signature);
   };
+
   // All properties on a domain are optional
   const domain = {
-    name: "Ether Mail",
+    name: "Scaffold ETH 2",
     version: "1",
-    chainId: 1,
-    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+    chainId: targetNetwork.id,
+    verifyingContract: "0x0000000000000000000000000000000000000000",
   };
 
   // The named list of all type definitions
@@ -124,16 +98,13 @@ const Dashboard: NextPage = () => {
     },
     contents: "Hello, Bob!",
   };
-  // const _typeDataSignMessage = async (walletAddress: string) => {
+
+  const closeModal = (isClosed: boolean) => {
+    if (isClosed) setIsModalOpen(false);
+  };
   const _typeDataSignMessage = async () => {
     try {
-      // const signature = await eip1193Provider.request({
-      //   method: "eth_signTypedData_v4",
-      //   params: [walletAddress, uiConfig],
-      // });
-
-      const signature = await ethersProvider._signTypedData(domain, types, value);
-      console.log("712sig:", signature);
+      setIsModalOpen(true);
     } catch (e) {
       console.log("ERR_712_SIGN", e);
     }
@@ -141,6 +112,7 @@ const Dashboard: NextPage = () => {
 
   return (
     <>
+      <SignModal isOpen={isModalOpen} domain={domain} data={value} types={types} onClose={closeModal} />
       <MetaHeader />
       <div className="flex items-center flex-col flex-grow">
         <div className="flex-grow bg-base-300 w-full px-8 py-12">
@@ -186,7 +158,7 @@ const Dashboard: NextPage = () => {
                     <button
                       disabled={!embeddedWallet}
                       onClick={() => {
-                        _typeDataSignMessage(embeddedWallet ? embeddedWallet.address : "");
+                        _typeDataSignMessage();
                       }}
                       className="ml-5 text-sm border border-violet-600 hover:border-violet-700 py-2 px-4 rounded-md text-violet-600 hover:text-violet-700 disabled:border-gray-500 disabled:text-gray-500 hover:disabled:text-gray-500"
                     >
