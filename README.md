@@ -1,8 +1,11 @@
-# 🏗 Scaffold-ETH 2
+# 🏗 Scaffold-ETH 2 x Privy
 
-Get started using Privy embedded wallets in your builds using this starter kit. Easily onboard new users using email or social login to create an embedded wallet for your users.
-[Login](packages\nextjs\public\assets\se-2-privy.png)
-[Dashboard](packages\nextjs\public\assets\se-2-privy.png)
+### Get started using [privy](https://docs.privy.io/) embedded wallets in your builds using this starter kit. Easily onboard new users using email or social login to create an embedded wallet for your users.
+![Login modal](https://github.com/blahkheart/se-2-privy/blob/main/packages/nextjs/public/assets/se-2-privy-2.png?raw=true)
+
+## Get information on the connected user from the `user` object
+
+![Dashboard](packages\nextjs\public\assets\se-2-privy.png)
 
 ## Quickstart
 
@@ -40,13 +43,16 @@ yarn start
 
 Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
 
+Use the `usePrivyEthersProvider()` hook in `packages/nextjs/hooks/scaffold-eth` to access `privyEthersProvider`. You can interact with your smart contract and send transactions, or sign messages for the embedded wallet using `privyEthersProvider`.
 Run smart contract test with `yarn hardhat:test`
 
 - Edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
-- Edit your frontend in `packages/nextjs/pages`
 - Edit your deployment scripts in `packages/hardhat/deploy`
+- Edit your frontend in `packages/nextjs/pages`
+- Get App ID from [privy console](https://docs.privy.io/) and enter it in your .env in `packages/nextjs/.env.local`
+- Configure Privy Provider in `packages/nextjs/pages/_app.tsx`
 
-## Documentation
+## Scaffold-ETH 2 Documentation
 
 Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
 
